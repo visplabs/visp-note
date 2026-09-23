@@ -63,8 +63,10 @@ function MnBlockMarker({ model }) {
           transition: 'background 120ms',
         }}>
           <span style={{
+            // Same ink as the ordered-list numbers: the marker guides the
+            // eye without competing with the words beside it.
             width: 5, height: 5, borderRadius: '50%',
-            background: T.ink,
+            background: T.inkMed,
           }} />
         </span>
       ) : block.kind === 'divider' ? (

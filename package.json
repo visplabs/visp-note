@@ -2,7 +2,7 @@
   "name": "vispnote",
   "version": "0.2.6",
   "desktopName": "vispnote.desktop",
-  "description": "VispNote \u2014 a local-first, block-based note-taking desktop app",
+  "description": "VispNote — a local-first, block-based note-taking desktop app",
   "license": "Apache-2.0",
   "author": {
     "name": "djkeshawa",
@@ -75,6 +75,9 @@
     "globals": "^17.7.0"
   },
   "dependencies": {
+    "@fontsource-variable/inter-tight": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
     "better-sqlite3": "^12.11.1",
     "electron-updater": "^6.8.9",
     "katex": "^0.16.47",

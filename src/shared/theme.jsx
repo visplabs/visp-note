@@ -120,14 +120,14 @@ function mnThemeColorScheme(T) {
 
 const MN_FONTS = {
   'Editorial (Newsreader + Inter)': {
-    ui: `'Inter Tight', ui-sans-serif, system-ui, -apple-system, sans-serif`,
-    body: `'Newsreader', Georgia, 'Times New Roman', serif`,
-    mono: `'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace`,
+    ui: `'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, -apple-system, sans-serif`,
+    body: `'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif`,
+    mono: `'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace`,
   },
   'Neutral (Inter only)': {
-    ui: `'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
-    body: `'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
-    mono: `'JetBrains Mono', ui-monospace, Menlo, monospace`,
+    ui: `'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
+    body: `'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
+    mono: `'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Menlo, monospace`,
   },
   'Technical (IBM Plex)': {
     ui: `'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif`,
@@ -135,9 +135,9 @@ const MN_FONTS = {
     mono: `'IBM Plex Mono', ui-monospace, Menlo, monospace`,
   },
   'Quiet (Instrument Serif)': {
-    ui: `'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
+    ui: `'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, sans-serif`,
     body: `'Instrument Serif', Georgia, serif`,
-    mono: `'JetBrains Mono', ui-monospace, Menlo, monospace`,
+    mono: `'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Menlo, monospace`,
   },
 };
 

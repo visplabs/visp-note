@@ -7,6 +7,13 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: vispnote-asset: https:; connect-src 'self' http://localhost:* http://127.0.0.1:*; object-src 'none'; base-uri 'self'; form-action 'none'" />
 <link rel="icon" type="image/png" href="assets/vispnote-icon.png" />
 <link rel="stylesheet" href="node_modules/katex/dist/katex.min.css" />
+<!-- The type system's three faces, bundled so the app never falls back to
+     Times/system fonts. Newsreader loads its optical-size axis so titles and
+     prose each get the cut drawn for their size. -->
+<link rel="stylesheet" href="node_modules/@fontsource-variable/inter-tight/index.css" />
+<link rel="stylesheet" href="node_modules/@fontsource-variable/newsreader/opsz.css" />
+<link rel="stylesheet" href="node_modules/@fontsource-variable/newsreader/opsz-italic.css" />
+<link rel="stylesheet" href="node_modules/@fontsource-variable/jetbrains-mono/index.css" />
 <style>
   html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
   body { background: var(--mn-bg, #f6f7f9); }
@@ -27,6 +34,8 @@
     box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--mn-focus, #4f6fd5) 70%, transparent);
   }
   .mn-contextual-assistance-trigger-label { display: none; }
+  /* Pane grips are hidden until hovered; keyboard focus must reveal them too. */
+  .mn-panel-grip-btn:focus-visible { opacity: 1 !important; }
   /* Views: the open affordance is quiet until you are on the row, and the bar
      along a card's bottom edge is not drawn until then at all. Doing this in
      CSS rather than React state matters — a view can hold hundreds of cards,

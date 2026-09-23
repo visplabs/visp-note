@@ -198,6 +198,7 @@ function MnSidebar({
   // every nav row. The shared props ride along at each use instead.
 
   const iconInbox = (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 9L3 3H13L14 9" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M2 9V13H14V9H10.5L9.5 11H6.5L5.5 9H2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>);
+  const iconPin = (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H10L9.4 6.2L11.8 8.6V9.8H4.2V8.6L6.6 6.2L6 2.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M8 9.8V13.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>);
   const iconToday = (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 2V4M11 2V4M2 7H14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><circle cx="8" cy="10.5" r="1.3" fill="currentColor"/></svg>);
   const iconAgenda = (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.2" y="3" width="11.6" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 2V4.8M11 2V4.8M2.2 6.7H13.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M5 9.3H8.7M5 11.4H10.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>);
   const iconViews = (<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.8" width="4.4" height="4.4" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="9.1" y="2.8" width="4.4" height="4.4" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="2.5" y="9.2" width="4.4" height="4.4" rx="1" stroke="currentColor" strokeWidth="1.3"/><path d="M9.3 10H13.3M9.3 12.2H12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>);
@@ -238,7 +239,7 @@ function MnSidebar({
                onClick={() => onSelectTag(null)} />
           <SidebarNavRow T={T} height={navRowHeight} icon={iconToday} label="Today" count={rollupCount}
                active={todayActive} onClick={onOpenToday} />
-          <SidebarNavRow T={T} height={navRowHeight} icon={iconInbox} label="Pinned" count={pinnedCount}
+          <SidebarNavRow T={T} height={navRowHeight} icon={iconPin} label="Pinned" count={pinnedCount}
                active={pinnedActive} onClick={onOpenPinned} />
           {featureState.showViews && (
             <SidebarNavRow T={T} height={navRowHeight} icon={iconViews} label="Views" count={viewsCount}

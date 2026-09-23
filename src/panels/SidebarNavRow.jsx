@@ -50,6 +50,9 @@ function SidebarNavRow({
         : (
           <span style={{
             ...dsMachineStyle(T, active ? T.inkMed : T.inkDim), fontWeight: 400,
+            // An empty destination still shows its zero, but recedes so the
+            // counts that carry news are the ones the eye lands on.
+            opacity: count === 0 && !active ? 0.45 : 1,
           }}>{count}</span>
         )
       )}

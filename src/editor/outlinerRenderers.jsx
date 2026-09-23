@@ -106,7 +106,7 @@ function MnMathBlock({ source, T }) {
     <div
       ref={ref}
       style={{
-        fontFamily: 'KaTeX_Main, Newsreader, serif',
+        fontFamily: 'KaTeX_Main, "Newsreader Variable", Newsreader, serif',
         fontSize: 16,
         color: T.ink,
         overflowX: 'auto',
