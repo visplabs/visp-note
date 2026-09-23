@@ -2160,6 +2160,18 @@ async function seedEditorNote(win, { id, title, body, expect = 'Parent' }) {
   win.webContents.reload();
   await waitFor(win, `editor note loaded: ${title}`, async () => {
     const current = await state(win);
+    // The previous scenario's renderer can flush its own lastSelectedId while
+    // unloading, after the write above, so the reload may reopen the old note.
+    // Selecting from the list is what a user would do, and removes the race.
+    if (current.mounted && !current.bootSplashVisible && current.selectedTitle !== title) {
+      await evaluate(win, `
+        (() => {
+          const row = [...document.querySelectorAll('[data-mn-note-row]')]
+            .find(item => item.textContent.includes(${JSON.stringify(title)}));
+          row?.click();
+        })()
+      `);
+    }
     const rows = await editorRows(win);
     return {
       ok: current.selectedTitle === title
