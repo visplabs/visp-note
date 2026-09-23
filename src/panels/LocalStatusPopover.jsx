@@ -53,8 +53,8 @@ function LocalStatusPopover({ activeVault, saveStatus = 'Saved', lastBackupAt = 
     <div ref={rootRef} style={{
       flexShrink: 0, margin: 10, position: 'relative',
     }}>
-      {/* The footer states where the vault is and whether it is saved. The
-          button opens the detail; settings live in the app bar. */}
+      {/* The footer states where the vault lives. The button opens the
+          detail; settings live in the app bar. */}
       <div style={{
         padding: '10px 11px', borderRadius: DS_RADIUS.row,
         background: T.bgElevated || T.bg, border: `1px solid ${T.lineSub}`,
@@ -66,8 +66,12 @@ function LocalStatusPopover({ activeVault, saveStatus = 'Saved', lastBackupAt = 
           boxShadow: `0 0 0 3px color-mix(in oklab, ${statusColor} 16%, transparent)`,
         }} />
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--mn-ui)', fontSize: 12, fontWeight: 600, color: T.ink }}>
-            {saveStatus === 'Saved' ? 'All changes saved' : saveStatus}
+          {/* The editor header's pill owns "Saved"; repeating it here put the
+              same word on screen twice. The footer only speaks up about saving
+              when something needs attention, since it is the one save signal
+              still visible when no note is open. */}
+          <div style={{ fontFamily: 'var(--mn-ui)', fontSize: 12, fontWeight: 600, color: saveStatus === 'Saved' ? T.ink : statusColor }}>
+            {saveStatus === 'Saved' ? 'Stored on this device' : saveStatus}
           </div>
           <div title={activeVault?.path || ''} style={{
             marginTop: 2, ...dsMachineStyle(T), fontSize: 9.5,

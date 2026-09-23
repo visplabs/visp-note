@@ -130,7 +130,7 @@ const MN_FONTS = {
     mono: `'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Menlo, monospace`,
   },
   'Technical (IBM Plex)': {
-    ui: `'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif`,
+    ui: `'IBM Plex Sans Variable', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif`,
     body: `'IBM Plex Serif', Georgia, serif`,
     mono: `'IBM Plex Mono', ui-monospace, Menlo, monospace`,
   },

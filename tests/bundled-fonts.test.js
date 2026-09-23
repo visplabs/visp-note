@@ -17,13 +17,14 @@ test('every font stylesheet linked from the shell exists on disk', () => {
 
 test('linked font packages are production dependencies so they get packaged', () => {
   const deps = require(path.join(root, 'package.json')).dependencies || {};
-  for (const pkg of ['inter-tight', 'newsreader', 'jetbrains-mono']) {
-    assert.ok(deps[`@fontsource-variable/${pkg}`], `@fontsource-variable/${pkg} must be a dependency`);
-  }
+  const linked = new Set([...html.matchAll(/href="node_modules\/(@fontsource(?:-variable)?\/[^/]+)\//g)].map(m => m[1]));
+  assert.ok(linked.size >= 7, 'expected every offered font pairing to be linked');
+  for (const pkg of linked) assert.ok(deps[pkg], `${pkg} must be a dependency`);
 });
 
-test('the default font stacks lead with the bundled family names', () => {
-  for (const family of ['Inter Tight Variable', 'Newsreader Variable', 'JetBrains Mono Variable']) {
+test('every font choice leads with a bundled family name', () => {
+  for (const family of ['Inter Tight Variable', 'Newsreader Variable', 'JetBrains Mono Variable',
+    'IBM Plex Sans Variable', 'IBM Plex Serif', 'IBM Plex Mono', 'Instrument Serif']) {
     assert.ok(theme.includes(`'${family}'`), `${family} missing from MN_FONTS`);
   }
 });
