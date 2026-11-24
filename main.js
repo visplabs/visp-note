@@ -438,7 +438,7 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   registerAssetProtocol();
   windowLifecycle.createTray();
   windowLifecycle.createWindow();
-  loadSavedAiKeys();
+  void loadSavedAiKeys();
   indexReadyPromise = rescanAllVaults().catch(e => {
     console.error('boot index rescan failed', e);
   });

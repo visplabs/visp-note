@@ -34,7 +34,7 @@ function findFile(dir, name) {
 
 function devToolsPort(configHome) {
   const file = findFile(configHome, 'DevToolsActivePort');
-  const port = file ? Number.parseInt(fs.readFileSync(file, 'utf8').split('\n')[0], 10) : NaN;
+  const port = file ? Number.parseInt(fs.readFileSync(file, 'utf8').split('\n')[0], 10) : Number.NaN;
   return Number.isInteger(port) && port > 0 ? port : null;
 }
 

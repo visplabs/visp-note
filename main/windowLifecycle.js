@@ -109,7 +109,7 @@ function createWindowLifecycle({
     tray.setToolTip(appName);
     trayHostAtCreation = false;
     const created = tray;
-    askForTrayHost().then(found => { if (tray === created) trayHostAtCreation = found; });
+    void askForTrayHost().then(found => { if (tray === created) trayHostAtCreation = found; });
     tray.on('click', () => {
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.hide();
       else showMainWindow();
@@ -232,7 +232,7 @@ function createWindowLifecycle({
         return;
       }
       event.preventDefault();
-      hideToTrayOrQuit(win);
+      hideToTrayOrQuit(win).catch(error => console.error('closing the window failed', error));
     });
     win.on('show', updateTrayMenu);
     win.on('hide', updateTrayMenu);
