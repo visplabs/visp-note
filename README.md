@@ -1,5 +1,7 @@
 # VispNote
 
+> **Status of this app.** The web app at [vispnote.com/app/](https://vispnote.com/app/) is the main VispNote app. This desktop app gets fixes only, with no new features. A new desktop app built around the web app will replace it. That app keeps your notes as real Markdown files in a real folder, and your existing notes will carry over.
+
 VispNote is a local-first desktop note app for individual knowledge workers who want to **write, connect, and act** without configuring a productivity system first.
 
 The default experience stays deliberately small: Notes, Today, Pinned, Tags, fast capture, search, and note-level connections. Your notes remain usable as plain files even if you stop using the app.
