@@ -36,6 +36,7 @@
   "scripts": {
     "build:renderer": "node scripts/build-renderer.js",
     "verify:package-renderer": "node scripts/verify-packaged-renderer.js",
+    "check:packaged-app": "node scripts/packaged-launch-check.js",
     "verify:release-artifacts": "node scripts/release-tools/verify-release-artifacts.js",
     "prepare:release-artifacts": "node scripts/release-tools/prepare-artifacts.js",
     "check:release-tag": "node scripts/release-tools/validate-release-tag.js",

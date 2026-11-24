@@ -109,3 +109,13 @@ jobs:
       - name: AI regression
         if: matrix.full_regression
         run: xvfb-run -a npm run regression:ai
+
+      # Every check above runs the app from source. This one builds the unpacked
+      # Linux package and starts it once, because a file missing from app.asar or
+      # a native library loaded from inside it only fails in a real package.
+      - name: Packaged app starts and searches
+        if: matrix.full_regression
+        run: |
+          npm run build:renderer
+          npx electron-builder --linux dir --x64 --publish never
+          xvfb-run -a npm run check:packaged-app
