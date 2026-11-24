@@ -159,6 +159,7 @@ contextBridge.exposeInMainWorld('mn', {
     related:   (vaultId, noteId, options) => ipcRenderer.invoke('mn:ai.related', vaultId, noteId, options),
     getConfig: () => ipcRenderer.invoke('mn:ai.getConfig'),
     setConfig: (patch) => ipcRenderer.invoke('mn:ai.setConfig', patch),
+    removeApiKey: (field) => ipcRenderer.invoke('mn:ai.removeApiKey', field),
   },
 
   integrations: {

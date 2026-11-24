@@ -1,7 +1,8 @@
 import { H, SettingsCard, Row, Segmented, Toggle, Select, FontSizeStepper } from '../settingsControls.jsx';
 import { platformApi } from '../../platform/index.js';
 import { uniqueOptions, mnAiInput, mnSettingsInput, BtnOutline, StaticValue } from '../settingsPrimitives.jsx';
-import { mnApiKeyStorageCopy } from './apiKeyStorageCopy.js';
+import { mnApiKeyStorageCopy } from './apiKeyField.js';
+import { MnApiKeyRow } from './ApiKeyRow.jsx';
 const { useState: useStateS, useEffect: useEffectS, useRef: useRefS } = React;
 
 const MN_AI_PROVIDERS = [
@@ -125,6 +126,16 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
     }
   };
 
+  const removeKey = async (keyField) => {
+    if (!platformApi.ai?.removeApiKey) return;
+    setMessage('');
+    const res = await platformApi.ai.removeApiKey(keyField);
+    if (res.ok) setConfig(res.value);
+    else setMessage(res.error || 'Could not remove the API key');
+    const st = await platformApi.ai.status();
+    if (st.ok) setStatus(st.value);
+  };
+
   const selectProvider = (providerId) => {
     const meta = mnAiProviderMeta(providerId);
     const patch = {
@@ -174,9 +185,6 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
       ? `${providerMeta.label} is configured. Ask AI will use hosted chat with keyword/recent-note context.`
       : status?.reason || `${providerMeta.label} needs an API key and model.`);
   const showApiKey = !!providerMeta.keyField;
-  const apiKeyValue = showApiKey ? (config?.[providerMeta.keyField] || '') : '';
-  const apiKeyConfigured = apiKeyValue === 'configured';
-  const apiKeyDirty = showApiKey ? !!config?.[`${providerMeta.keyField}Dirty`] : false;
   const apiKeyCopy = mnApiKeyStorageCopy(config?.keyStorage, providerMeta.keyField);
   const baseValue = config?.[providerMeta.baseField] || providerMeta.baseDefault || '';
   const statusButtonLabel = busy
@@ -312,21 +320,10 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
           <Toggle T={T} checked={config?.piiReduction !== false} onChange={v => save({ piiReduction: v }, false)} />
         </Row>
         {showApiKey && (
-          <Row T={T} label={`${providerMeta.label} API key`} sub={
-            <span style={apiKeyCopy.warn ? { color: T.ink, fontWeight: 600 } : undefined}>{apiKeyCopy.sub}</span>
-          }>
-            <input
-              type="password"
-              value={apiKeyConfigured ? '' : apiKeyValue}
-              onChange={(e) => setConfig(c => ({ ...(c || {}), [providerMeta.keyField]: e.target.value, [`${providerMeta.keyField}Dirty`]: true }))}
-              onBlur={(e) => {
-                if (apiKeyConfigured && !apiKeyDirty && !e.target.value.trim()) return;
-                save({ [providerMeta.keyField]: e.target.value }, true);
-              }}
-              placeholder={apiKeyCopy.placeholder || (apiKeyConfigured ? 'Configured. Type a new key to replace it.' : 'Paste API key')}
-              style={mnAiInput(T, 260)}
-            />
-          </Row>
+          <MnApiKeyRow T={T} label={`${providerMeta.label} API key`} keyField={providerMeta.keyField} config={config}
+            onChange={value => setConfig(c => ({ ...(c || {}), [providerMeta.keyField]: value, [`${providerMeta.keyField}Dirty`]: true }))}
+            onSave={value => save({ [providerMeta.keyField]: value }, true)}
+            onRemove={() => removeKey(providerMeta.keyField)} />
         )}
         <Row T={T} label={provider === 'ollama' ? 'Ollama host' : 'Base URL'} sub={provider === 'custom' ? 'OpenAI-compatible chat completions base URL.' : provider === 'ollama' ? 'Default local Ollama endpoint. Change only if your server uses another address.' : 'Provider API base URL. Change only for proxies or gateways.'}>
           <input value={baseValue}

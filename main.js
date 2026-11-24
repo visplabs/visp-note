@@ -376,6 +376,18 @@ async function rescanAllVaults() {
   for (const v of vaults) await rescanOne(v);
 }
 
+// The system key store can be slow or locked, so saved keys are decrypted after
+// the window is open rather than before it.
+async function loadSavedAiKeys() {
+  try {
+    await store.migrateAiKeys();
+    const keys = await store.loadAiKeys();
+    if (Object.keys(keys).length) ai.setConfig(keys, { rejectUnknown: false });
+  } catch (e) {
+    console.error('saved AI keys could not be loaded', e);
+  }
+}
+
 // ── App lifecycle ────────────────────────────────────────────────────────────
 
 app.setName(APP_NAME);
@@ -402,8 +414,9 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   try {
     await store.loadConfig();   // ensures the vault folder, seeds on first run
     vaultWatcher.refresh(await store.listVaults());
-    store.configureAiKeyCodec(createSafeStorageCodec({ safeStorage, platform: process.platform }));
-    await store.migrateAiKeys().catch(e => console.error('AI key encryption migration failed', e));
+    if (process.env.VISPNOTE_DISABLE_SAFE_STORAGE !== '1') {
+      store.configureAiKeyCodec(createSafeStorageCodec({ safeStorage, platform: process.platform }));
+    }
     const prefs = await store.getPrefs();
     if (prefs.aiConfig) {
       try {
@@ -420,6 +433,7 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   registerAssetProtocol();
   windowLifecycle.createTray();
   windowLifecycle.createWindow();
+  loadSavedAiKeys();
   indexReadyPromise = rescanAllVaults().catch(e => {
     console.error('boot index rescan failed', e);
   });

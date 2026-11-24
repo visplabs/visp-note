@@ -1,8 +1,9 @@
-// On Linux without a secret service, safeStorage falls back to the basic_text
-// backend, whose key is a constant built into Chromium: that is not encryption.
+// Electron uses the basic_text backend when it does not recognise the Linux desktop
+// (sway, i3, ...) or no secret service is reachable. Its key is a constant built into
+// Chromium, so values "encrypted" with it are not protected.
 const UNPROTECTED_LINUX_BACKENDS = new Set(['basic_text', 'unknown']);
-// A secret service that is running but not answering leaves safeStorage's
-// promises pending forever, which would hold the app's start-up with them.
+// A secret service that is running but not answering leaves safeStorage's promises
+// pending; callers stop waiting after this long, and a late answer is still used.
 const KEY_STORE_TIMEOUT_MS = 5000;
 
 function withTimeout(promise, timeoutMs) {
@@ -15,20 +16,24 @@ function withTimeout(promise, timeoutMs) {
 
 function createSafeStorageCodec({ safeStorage, platform, timeoutMs = KEY_STORE_TIMEOUT_MS }) {
   let availability = null;
+  const decryptions = new Map();
+  const reEncrypt = new Set();
 
-  async function checkAvailability() {
-    try {
-      if (!await withTimeout(safeStorage.isAsyncEncryptionAvailable(), timeoutMs)) return false;
-    } catch {
-      return false;
+  function backendProtects() {
+    return platform !== 'linux' || !UNPROTECTED_LINUX_BACKENDS.has(safeStorage.getSelectedStorageBackend());
+  }
+
+  function availabilityProbe() {
+    if (!availability) {
+      availability = Promise.resolve()
+        .then(() => safeStorage.isAsyncEncryptionAvailable())
+        .then(available => available === true && backendProtects(), () => false);
     }
-    if (platform !== 'linux') return true;
-    return !UNPROTECTED_LINUX_BACKENDS.has(safeStorage.getSelectedStorageBackend());
+    return availability;
   }
 
   function canEncrypt() {
-    if (!availability) availability = checkAvailability();
-    return availability;
+    return withTimeout(availabilityProbe(), timeoutMs).catch(() => false);
   }
 
   async function encrypt(text) {
@@ -36,12 +41,29 @@ function createSafeStorageCodec({ safeStorage, platform, timeoutMs = KEY_STORE_T
     return Buffer.from(sealed).toString('base64');
   }
 
-  async function decrypt(sealed) {
-    const { result } = await withTimeout(safeStorage.decryptStringAsync(Buffer.from(String(sealed), 'base64')), timeoutMs);
-    return result;
+  function decryption(sealed) {
+    if (!decryptions.has(sealed)) {
+      const pending = Promise.resolve()
+        .then(() => safeStorage.decryptStringAsync(Buffer.from(sealed, 'base64')))
+        .then(({ result, shouldReEncrypt }) => {
+          if (shouldReEncrypt) reEncrypt.add(sealed);
+          return result;
+        });
+      pending.catch(() => {});
+      decryptions.set(sealed, pending);
+    }
+    return decryptions.get(sealed);
   }
 
-  return { canEncrypt, encrypt, decrypt };
+  function decrypt(sealed) {
+    return withTimeout(decryption(String(sealed)), timeoutMs);
+  }
+
+  function reEncryptNeeded(sealed) {
+    return reEncrypt.has(String(sealed));
+  }
+
+  return { canEncrypt, encrypt, decrypt, reEncryptNeeded };
 }
 
 module.exports = { createSafeStorageCodec };
