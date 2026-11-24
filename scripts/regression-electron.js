@@ -2119,6 +2119,7 @@ async function editorBlockSelectionState(win) {
 }
 
 async function runScenario(win, area, name, fn) {
+  if (process.env.VISPNOTE_REGRESSION_AREA && process.env.VISPNOTE_REGRESSION_AREA !== area) return;
   try {
     await fn();
     console.log(`[scenario:pass] ${area} - ${name}`);
@@ -3829,6 +3830,9 @@ async function runRegression() {
   });
   await runScenario(win, 'Editor', 'checkboxes align, toggle by keyboard, and survive reload in both themes', async () => {
     await require('./regression-checkbox-rendering').runCheckboxRenderingScenario(win, { seedEditorNote, evaluate, waitFor });
+  });
+  await runScenario(win, 'Rendering', 'math and diagrams render in both themes, and hostile diagram markup is neutralised', async () => {
+    await require('./regression-rich-rendering').runRichRenderingScenario(win, { seedEditorNote, evaluate, waitFor });
   });
 
   const finalState = await state(win);
