@@ -1,9 +1,11 @@
 function createWindowLifecycle({
   app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut,
   path, rootDir, appName, iconPath, attachEditContextMenu, hardenWindow, quitPersistence,
+  detectTrayHost, platform = process.platform,
 }) {
   let mainWindow = null;
   let tray = null;
+  let trayHostFound = false;
   let isQuitting = false;
   let flushSequence = 0;
   let shortcutState = { accelerator: null, registered: false, error: null };
@@ -76,10 +78,25 @@ function createWindowLifecycle({
     ]));
   }
 
+  function checkTrayHost() {
+    Promise.resolve()
+      .then(() => detectTrayHost())
+      .then(found => { trayHostFound = found === true; })
+      .catch(error => {
+        trayHostFound = false;
+        console.warn('tray host check failed; closing the window will quit', error?.message || error);
+      });
+  }
+
+  function closeHidesWindow() {
+    return platform === 'darwin' || (!!tray && trayHostFound);
+  }
+
   function createTray() {
     if (tray) return;
     tray = new Tray(createAppIcon());
     tray.setToolTip(appName);
+    checkTrayHost();
     tray.on('click', () => {
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.hide();
       else showMainWindow();
@@ -166,6 +183,7 @@ function createWindowLifecycle({
     mainWindow = win;
     attachEditContextMenu(win);
     win.on('close', event => {
+      if (!isQuitting && !closeHidesWindow()) isQuitting = true;
       if (isQuitting) {
         if (win.__vispnoteFlushComplete) return;
         event.preventDefault();

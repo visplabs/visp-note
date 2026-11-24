@@ -11,6 +11,7 @@ const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFile } = require('child_process');
 const store = require('./lib/store');
 const attachments = require('./lib/attachments');
 const linkRename = require('./lib/linkRename');
@@ -29,6 +30,7 @@ const { createNoteExportService } = require('./main/noteExportService');
 const { createSpellcheckService } = require('./main/spellcheckService');
 const { createWindowSecurity } = require('./main/windowSecurity');
 const { createWindowLifecycle } = require('./main/windowLifecycle');
+const { createTrayHostProbe } = require('./main/trayHostProbe');
 const { createUpdateService } = require('./main/updateService');
 const { createIpcRuntime } = require('./main/ipcRuntime');
 const { createNovelImportService } = require('./main/novelImportService');
@@ -80,6 +82,7 @@ const windowLifecycle = createWindowLifecycle({
   app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut,
   path, rootDir: __dirname, appName: APP_NAME, iconPath: APP_ICON_PATH,
   attachEditContextMenu, hardenWindow, quitPersistence,
+  detectTrayHost: createTrayHostProbe({ platform: process.platform, execFile }),
 });
 const updateService = createUpdateService({
   app, autoUpdater, getMainWindow: windowLifecycle.getMainWindow,
