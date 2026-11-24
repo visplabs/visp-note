@@ -217,8 +217,13 @@ function useAppLifecycleController({ HAS_DISK, MN_NOTES_VAULTS_SERVICE, activeVa
       (async () => {
         try {
           const res = await desktopBridge.preferences.getPrefs();
-          const recovery = (res?.ok ? res.value : res)?.configRecovery;
-          if (!recovery) return;
+          const prefs = res?.ok ? res.value : res;
+          const recovery = prefs?.configRecovery;
+          if (!recovery) {
+            const searchProblem = prefs?.searchIndexProblem;
+            if (searchProblem?.title) showAppNotice(searchProblem.title, searchProblem.body, 'warn');
+            return;
+          }
           const count = recovery.vaultCount || 0;
           // One string with a swapped opening clause, so the three reasons stay
           // visually identical and cannot drift apart. 'empty' means nothing was

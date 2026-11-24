@@ -32,6 +32,7 @@ const { createWindowSecurity } = require('./main/windowSecurity');
 const { createWindowLifecycle } = require('./main/windowLifecycle');
 const { createTrayHostProbe } = require('./main/trayHostProbe');
 const { createSafeStorageCodec } = require('./main/safeStorageCodec');
+const { describeSearchIndexFailure } = require('./main/searchIndexProblem');
 const { createUpdateService } = require('./main/updateService');
 const { createIpcRuntime } = require('./main/ipcRuntime');
 const { createNovelImportService } = require('./main/novelImportService');
@@ -58,6 +59,7 @@ const { createPreferencesService } = require('./lib/connectors/ipc/preferencesSe
 let indexReadyPromise = Promise.resolve();
 let searchIndexAvailable = false;
 let searchIndexError = null;
+let searchIndexFailure = null;
 let memoryConnector = null;
 const indexVaultLocks = new Map();
 const APP_NAME = 'VispNote';
@@ -145,6 +147,7 @@ const {
 function noteSearchIndexFailure(context, error) {
   searchIndexAvailable = false;
   searchIndexError = error?.message || String(error);
+  searchIndexFailure = error;
   console.error(`[search-index] ${context} failed`, error);
 }
 
@@ -153,6 +156,7 @@ function initializeSearchIndex() {
     idx.init();
     searchIndexAvailable = true;
     searchIndexError = null;
+    searchIndexFailure = null;
     return true;
   } catch (e) {
     noteSearchIndexFailure('init', e);
@@ -278,6 +282,7 @@ registerWorkspaceHandlers(ipcMain, {
 registerPreferencesHandlers(ipcMain, {
   wrap, store, ai, setPrefsFromIpc, importThemeFileFromIpc, spellcheckWords,
   featureUsageStatusFromIpc, exportFeatureUsageFromIpc, shareFeatureUsageFromIpc,
+  getSearchIndexProblem: () => (searchIndexAvailable ? null : describeSearchIndexFailure(searchIndexFailure, process.platform)),
 });
 
 registerSearchHandlers(ipcMain, {

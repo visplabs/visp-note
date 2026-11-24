@@ -29,3 +29,11 @@ test('every folder main.js requires from is packaged, so the installed app can s
     assert.ok(patterns.includes(`${folder}/**/*`), `electron-builder.yml files must include ${folder}/**/*`);
   }
 });
+
+test('macOS packages declare the oldest macOS that Electron 44 and later run on', () => {
+  const builder = fs.readFileSync(path.join(ROOT, 'electron-builder.yml'), 'utf8');
+  const mac = builder.split(/^mac:\s*$/m)[1].split(/^\S/m)[0];
+  const declared = mac.match(/^\s+minimumSystemVersion:\s*"?([\d.]+)"?\s*$/m);
+  assert.ok(declared, 'mac.minimumSystemVersion is missing, so macOS 12 users could download a build that cannot start');
+  assert.ok(Number.parseFloat(declared[1]) >= 13, `macOS minimum ${declared[1]} is older than Electron supports`);
+});
