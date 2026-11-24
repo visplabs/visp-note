@@ -6,7 +6,7 @@ for (const stream of [process.stdout, process.stderr]) {
   if (stream && typeof stream.on === 'function') stream.on('error', () => {});
 }
 
-const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut, shell, protocol } = require('electron');
+const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut, shell, protocol, safeStorage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +31,7 @@ const { createSpellcheckService } = require('./main/spellcheckService');
 const { createWindowSecurity } = require('./main/windowSecurity');
 const { createWindowLifecycle } = require('./main/windowLifecycle');
 const { createTrayHostProbe } = require('./main/trayHostProbe');
+const { createSafeStorageCodec } = require('./main/safeStorageCodec');
 const { createUpdateService } = require('./main/updateService');
 const { createIpcRuntime } = require('./main/ipcRuntime');
 const { createNovelImportService } = require('./main/novelImportService');
@@ -401,6 +402,8 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   try {
     await store.loadConfig();   // ensures the vault folder, seeds on first run
     vaultWatcher.refresh(await store.listVaults());
+    store.configureAiKeyCodec(createSafeStorageCodec({ safeStorage, platform: process.platform }));
+    await store.migrateAiKeys().catch(e => console.error('AI key encryption migration failed', e));
     const prefs = await store.getPrefs();
     if (prefs.aiConfig) {
       try {

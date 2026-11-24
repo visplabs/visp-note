@@ -1,6 +1,7 @@
 import { H, SettingsCard, Row, Segmented, Toggle, Select, FontSizeStepper } from '../settingsControls.jsx';
 import { platformApi } from '../../platform/index.js';
 import { uniqueOptions, mnAiInput, mnSettingsInput, BtnOutline, StaticValue } from '../settingsPrimitives.jsx';
+import { mnApiKeyStorageCopy } from './apiKeyStorageCopy.js';
 const { useState: useStateS, useEffect: useEffectS, useRef: useRefS } = React;
 
 const MN_AI_PROVIDERS = [
@@ -176,6 +177,7 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
   const apiKeyValue = showApiKey ? (config?.[providerMeta.keyField] || '') : '';
   const apiKeyConfigured = apiKeyValue === 'configured';
   const apiKeyDirty = showApiKey ? !!config?.[`${providerMeta.keyField}Dirty`] : false;
+  const apiKeyCopy = mnApiKeyStorageCopy(config?.keyStorage, providerMeta.keyField);
   const baseValue = config?.[providerMeta.baseField] || providerMeta.baseDefault || '';
   const statusButtonLabel = busy
     ? 'Checking...'
@@ -244,6 +246,20 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
         </Row>
       </SettingsCard>
 
+      {showApiKey && apiKeyCopy.warn && (
+        <div role="note" style={{
+          marginBottom: 12,
+          padding: '10px 12px',
+          borderRadius: 6,
+          border: `1px solid ${T.warn}`,
+          background: T.bgSub,
+          color: T.ink,
+          fontFamily: 'var(--mn-body)',
+          fontSize: 12.5,
+          lineHeight: 1.45,
+        }}>{apiKeyCopy.sub}</div>
+      )}
+
       <details style={{ marginBottom: 12 }}>
         <summary style={{ cursor: 'pointer', fontFamily: 'var(--mn-ui)', fontSize: 12.5, color: T.inkMed, marginBottom: 10 }}>
           Advanced provider settings
@@ -296,7 +312,9 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
           <Toggle T={T} checked={config?.piiReduction !== false} onChange={v => save({ piiReduction: v }, false)} />
         </Row>
         {showApiKey && (
-          <Row T={T} label={`${providerMeta.label} API key`} sub="Stored locally in VispNote settings. It is used only from this app.">
+          <Row T={T} label={`${providerMeta.label} API key`} sub={
+            <span style={apiKeyCopy.warn ? { color: T.ink, fontWeight: 600 } : undefined}>{apiKeyCopy.sub}</span>
+          }>
             <input
               type="password"
               value={apiKeyConfigured ? '' : apiKeyValue}
@@ -305,7 +323,7 @@ function SectionAI({ T, assistanceEnabled = false, onAssistanceChange }) {
                 if (apiKeyConfigured && !apiKeyDirty && !e.target.value.trim()) return;
                 save({ [providerMeta.keyField]: e.target.value }, true);
               }}
-              placeholder={apiKeyConfigured ? 'Configured. Type a new key to replace it.' : 'Paste API key'}
+              placeholder={apiKeyCopy.placeholder || (apiKeyConfigured ? 'Configured. Type a new key to replace it.' : 'Paste API key')}
               style={mnAiInput(T, 260)}
             />
           </Row>
