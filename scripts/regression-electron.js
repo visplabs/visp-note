@@ -2119,6 +2119,7 @@ async function editorBlockSelectionState(win) {
 }
 
 async function runScenario(win, area, name, fn) {
+  if (process.env.VISPNOTE_REGRESSION_AREA && process.env.VISPNOTE_REGRESSION_AREA !== area) return;
   try {
     await fn();
     console.log(`[scenario:pass] ${area} - ${name}`);
@@ -3523,15 +3524,8 @@ async function runGeneralAttachmentScenario(win) {
 
 async function runRegression() {
   const win = await waitForMainWindow();
-  win.webContents.on('console-message', (_event, detailsOrLevel, legacyMessage, legacyLine, legacySourceId) => {
-    const details = detailsOrLevel && typeof detailsOrLevel === 'object'
-      ? detailsOrLevel
-      : { level: detailsOrLevel, message: legacyMessage, lineNumber: legacyLine, sourceId: legacySourceId };
-    const level = details?.level ?? 'log';
-    const message = details?.message ?? '';
-    const sourceId = details?.sourceId ?? '';
-    const line = details?.lineNumber ?? 0;
-    console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+  win.webContents.on('console-message', ({ level, message, sourceId, lineNumber }) => {
+    console.log(`[renderer:${level}] ${message} (${sourceId}:${lineNumber})`);
   });
   win.webContents.on('render-process-gone', (_event, details) => {
     console.error('Renderer process exited unexpectedly', details);
@@ -3836,6 +3830,9 @@ async function runRegression() {
   });
   await runScenario(win, 'Editor', 'checkboxes align, toggle by keyboard, and survive reload in both themes', async () => {
     await require('./regression-checkbox-rendering').runCheckboxRenderingScenario(win, { seedEditorNote, evaluate, waitFor });
+  });
+  await runScenario(win, 'Rendering', 'math and diagrams render in both themes, and hostile diagram markup is neutralised', async () => {
+    await require('./regression-rich-rendering').runRichRenderingScenario(win, { seedEditorNote, evaluate, waitFor });
   });
 
   const finalState = await state(win);

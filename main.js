@@ -6,11 +6,12 @@ for (const stream of [process.stdout, process.stderr]) {
   if (stream && typeof stream.on === 'function') stream.on('error', () => {});
 }
 
-const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut, shell, protocol } = require('electron');
+const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut, shell, protocol, safeStorage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFile } = require('child_process');
 const store = require('./lib/store');
 const attachments = require('./lib/attachments');
 const linkRename = require('./lib/linkRename');
@@ -29,6 +30,9 @@ const { createNoteExportService } = require('./main/noteExportService');
 const { createSpellcheckService } = require('./main/spellcheckService');
 const { createWindowSecurity } = require('./main/windowSecurity');
 const { createWindowLifecycle } = require('./main/windowLifecycle');
+const { createTrayHostProbe } = require('./main/trayHostProbe');
+const { createSafeStorageCodec } = require('./main/safeStorageCodec');
+const { describeSearchIndexFailure } = require('./main/searchIndexProblem');
 const { createUpdateService } = require('./main/updateService');
 const { createIpcRuntime } = require('./main/ipcRuntime');
 const { createNovelImportService } = require('./main/novelImportService');
@@ -55,6 +59,7 @@ const { createPreferencesService } = require('./lib/connectors/ipc/preferencesSe
 let indexReadyPromise = Promise.resolve();
 let searchIndexAvailable = false;
 let searchIndexError = null;
+let searchIndexFailure = null;
 let memoryConnector = null;
 const indexVaultLocks = new Map();
 const APP_NAME = 'VispNote';
@@ -80,6 +85,7 @@ const windowLifecycle = createWindowLifecycle({
   app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, dialog, globalShortcut,
   path, rootDir: __dirname, appName: APP_NAME, iconPath: APP_ICON_PATH,
   attachEditContextMenu, hardenWindow, quitPersistence,
+  detectTrayHost: createTrayHostProbe({ platform: process.platform, execFile }),
 });
 const updateService = createUpdateService({
   app, autoUpdater, getMainWindow: windowLifecycle.getMainWindow,
@@ -141,6 +147,7 @@ const {
 function noteSearchIndexFailure(context, error) {
   searchIndexAvailable = false;
   searchIndexError = error?.message || String(error);
+  searchIndexFailure = error;
   console.error(`[search-index] ${context} failed`, error);
 }
 
@@ -149,6 +156,7 @@ function initializeSearchIndex() {
     idx.init();
     searchIndexAvailable = true;
     searchIndexError = null;
+    searchIndexFailure = null;
     return true;
   } catch (e) {
     noteSearchIndexFailure('init', e);
@@ -274,6 +282,7 @@ registerWorkspaceHandlers(ipcMain, {
 registerPreferencesHandlers(ipcMain, {
   wrap, store, ai, setPrefsFromIpc, importThemeFileFromIpc, spellcheckWords,
   featureUsageStatusFromIpc, exportFeatureUsageFromIpc, shareFeatureUsageFromIpc,
+  getSearchIndexProblem: () => (searchIndexAvailable ? null : describeSearchIndexFailure(searchIndexFailure, process.platform)),
 });
 
 registerSearchHandlers(ipcMain, {
@@ -372,6 +381,18 @@ async function rescanAllVaults() {
   for (const v of vaults) await rescanOne(v);
 }
 
+// The system key store can be slow or locked, so saved keys are decrypted after
+// the window is open rather than before it.
+async function loadSavedAiKeys() {
+  try {
+    await store.migrateAiKeys();
+    const keys = await store.loadAiKeys();
+    if (Object.keys(keys).length) ai.setConfig(keys, { rejectUnknown: false });
+  } catch (e) {
+    console.error('saved AI keys could not be loaded', e);
+  }
+}
+
 // ── App lifecycle ────────────────────────────────────────────────────────────
 
 app.setName(APP_NAME);
@@ -398,6 +419,9 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   try {
     await store.loadConfig();   // ensures the vault folder, seeds on first run
     vaultWatcher.refresh(await store.listVaults());
+    if (process.env.VISPNOTE_DISABLE_SAFE_STORAGE !== '1') {
+      store.configureAiKeyCodec(createSafeStorageCodec({ safeStorage, platform: process.platform }));
+    }
     const prefs = await store.getPrefs();
     if (prefs.aiConfig) {
       try {
@@ -414,6 +438,7 @@ if (singleInstanceLock) app.whenReady().then(async () => {
   registerAssetProtocol();
   windowLifecycle.createTray();
   windowLifecycle.createWindow();
+  void loadSavedAiKeys();
   indexReadyPromise = rescanAllVaults().catch(e => {
     console.error('boot index rescan failed', e);
   });

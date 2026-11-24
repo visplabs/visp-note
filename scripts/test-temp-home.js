@@ -3,7 +3,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+function usePrivateKeyStore(app) {
+  app.commandLine.appendSwitch('password-store', 'basic');
+  process.env.VISPNOTE_DISABLE_SAFE_STORAGE = '1';
+}
+
 function configureIsolatedUserData(app, home) {
+  usePrivateKeyStore(app);
   const userData = path.join(home, 'electron-user-data');
   fs.mkdirSync(userData, { recursive: true });
   app.setPath('userData', userData);

@@ -3,6 +3,7 @@
 import { MN_THEMES } from '../shared/theme.jsx';
 import { mnRenderAnnotated, mnRenderMarkdownInlineText, mnRenderSpecialInlineText } from './markdownInlineRenderers.jsx';
 import { MN_CODE_LANGUAGES, mnCodeLanguageLabel, mnNormalizeCodeLanguage, mnRenderCode } from './codeHighlighter.jsx';
+import { mnMermaidConfig } from './mermaidConfig.js';
 
 const MN_AI_ACTIONS = [
   {
@@ -146,12 +147,7 @@ function mnMermaidInit(theme) {
   if (!window.mermaid) return false;
   if (_mnMermaidTheme === theme) return true;
   try {
-    window.mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: 'strict',
-      theme: theme === 'dark' ? 'dark' : 'default',
-      fontFamily: 'inherit',
-    });
+    window.mermaid.initialize(mnMermaidConfig(theme));
     _mnMermaidTheme = theme;
   } catch (e) {
     _mnMermaidTheme = '';

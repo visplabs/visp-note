@@ -29,13 +29,8 @@ async function waitForMainWindow(timeoutMs = 30000) {
 }
 
 async function waitForRenderer(win, timeoutMs = 30000) {
-  win.webContents.on('console-message', (_event, details, legacyMessage, legacyLine, legacySourceId) => {
-    const structured = details && typeof details === 'object' ? details : null;
-    const level = structured?.level ?? details ?? 'log';
-    const message = structured?.message ?? legacyMessage ?? '';
-    const sourceId = structured?.sourceId ?? legacySourceId ?? '';
-    const line = structured?.lineNumber ?? legacyLine ?? 0;
-    console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+  win.webContents.on('console-message', ({ level, message, sourceId, lineNumber }) => {
+    console.log(`[renderer:${level}] ${message} (${sourceId}:${lineNumber})`);
   });
   const started = Date.now();
   let lastState = null;

@@ -65,15 +65,15 @@ function writeLinuxPackage(root, {
   sqliteArch = 'x64',
   vecArch = 'x64',
   extraVecPackage = '',
+  extraSqlitePrebuild = '',
 } = {}) {
   const resources = path.join(root, 'dist', 'linux-unpacked', 'resources');
   writeFile(path.join(resources, 'app', verifier.EXPECTED), renderer);
   writeFile(path.join(resources, 'app', 'package.json'), JSON.stringify({ version }));
   writeFile(path.join(resources, '..', 'vispnote'), elf(executableArch));
-  writeFile(
-    path.join(resources, 'app.asar.unpacked', 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node'),
-    elf(sqliteArch)
-  );
+  const sqlitePrebuilds = path.join(resources, 'app.asar.unpacked', 'node_modules', 'better-sqlite3', 'prebuilds');
+  writeFile(path.join(sqlitePrebuilds, 'linux-x64.node'), elf(sqliteArch));
+  if (extraSqlitePrebuild) writeFile(path.join(sqlitePrebuilds, `${extraSqlitePrebuild}.node`), elf('arm64'));
   const vecPackage = `sqlite-vec-linux-${vecArch}`;
   writeFile(
     path.join(resources, 'app.asar.unpacked', 'node_modules', vecPackage, 'vec0.so'),
@@ -151,6 +151,21 @@ test('Packaged verifier rejects wrong-CPU executable and native modules', () => 
         expectedArch: 'x64',
       }),
       /Wrong-platform better-sqlite3 native module/
+    );
+  });
+});
+
+test('Packaged verifier requires exactly the better-sqlite3 prebuild for the target', () => {
+  withFixture(({ root, devBundle }) => {
+    const resourceRoot = writeLinuxPackage(root, { extraSqlitePrebuild: 'linux-arm64' });
+    assert.throws(
+      () => verifier.verifyResourceRoots({
+        root,
+        devBundle,
+        resourceRoots: [resourceRoot],
+        expectedArch: 'x64',
+      }),
+      /better-sqlite3 must ship only prebuilds\/linux-x64\.node/
     );
   });
 });

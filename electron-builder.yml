@@ -13,6 +13,7 @@ publish:
 files:
   - vispnote.html
   - main.js
+  - main/**/*
   - preload.js
   - package.json
   - assets/**/*
@@ -33,6 +34,8 @@ files:
   - "!vispnote-web/**/*"
   - "!*.tgz"
   - "!*.log"
+  - "!node_modules/better-sqlite3/prebuilds/**/*"
+  - "node_modules/better-sqlite3/prebuilds/${platform}-${arch}.node"
 
 asar: true
 asarUnpack:
@@ -45,6 +48,7 @@ beforePack: scripts/before-pack.js
 
 mac:
   category: public.app-category.productivity
+  minimumSystemVersion: "13.0"
   publish: null
   # Unsigned macOS builds. Notarization needs an App Store Connect key, and no
   # signing secrets are configured, so requiring it blocked every release after

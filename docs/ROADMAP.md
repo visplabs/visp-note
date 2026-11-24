@@ -1,5 +1,7 @@
 # VispNote roadmap — write, connect, act
 
+> **Status of this app.** The web app at [vispnote.com/app/](https://vispnote.com/app/) is the main VispNote app. This desktop app gets fixes only, with no new features. A new desktop app built around the web app will replace it. That app keeps your notes as real Markdown files in a real folder, and your existing notes will carry over.
+
 VispNote is not an Obsidian clone and will not compete through plugin count, customization depth, or feature parity.
 
 > **Write, connect, act — without configuring a productivity system first.**

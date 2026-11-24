@@ -11,6 +11,7 @@ const retry = require('../scripts/release-tools/retry-command');
 const tags = require('../scripts/release-tools/validate-release-tag');
 const finalVerifier = require('../scripts/release-tools/verify-release-artifacts');
 const PROJECT_ROOT = path.join(__dirname, '..');
+const { writeFakeAsar } = require('./helpers/asarFixtures');
 
 function withTemp(fn) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vispnote-release-'));
@@ -315,7 +316,7 @@ test('packaged renderer discovery finds the macOS capital-R Resources directory'
   // pass the build stage.
   withTemp(root => {
     const mac = path.join(root, 'VispNote.app', 'Contents', 'Resources');
-    write(path.join(mac, 'app.asar'), 'archive');
+    writeFakeAsar(path.join(mac, 'app.asar'));
     const found = renderer.discoverResourceRoots(root, 'darwin');
     assert.equal(found.length, 1, 'capital-R Resources must be discovered');
     assert.equal(found[0].resources, mac);
@@ -324,7 +325,7 @@ test('packaged renderer discovery finds the macOS capital-R Resources directory'
   // Linux and Windows keep their lowercase layout.
   withTemp(root => {
     const linux = path.join(root, 'linux-unpacked', 'resources');
-    write(path.join(linux, 'app.asar'), 'archive');
+    writeFakeAsar(path.join(linux, 'app.asar'));
     assert.equal(renderer.discoverResourceRoots(root, 'linux').length, 1);
   });
 });
@@ -337,7 +338,7 @@ test('reading a file out of app.asar uses separators this platform understands',
     const resources = path.join(root, 'resources');
     let requested = null;
     const original = require.cache[require.resolve('@electron/asar')];
-    write(path.join(resources, 'app.asar'), 'archive');
+    writeFakeAsar(path.join(resources, 'app.asar'));
 
     // The unpacked branch is the reference: it already joins natively.
     write(path.join(resources, 'app', 'build', 'renderer', 'app.js'), 'bundle');

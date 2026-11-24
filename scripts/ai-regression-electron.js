@@ -426,13 +426,8 @@ async function confirmAiReview(win, label, expectedText) {
 
 async function runAiRegression() {
   const win = await waitForMainWindow();
-  win.webContents.on('console-message', (_event, details, legacyMessage, legacyLine, legacySourceId) => {
-    const structured = details && typeof details === 'object' ? details : null;
-    const level = structured?.level ?? details ?? 'log';
-    const message = structured?.message ?? legacyMessage ?? '';
-    const sourceId = structured?.sourceId ?? legacySourceId ?? '';
-    const line = structured?.lineNumber ?? legacyLine ?? 0;
-    console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+  win.webContents.on('console-message', ({ level, message, sourceId, lineNumber }) => {
+    console.log(`[renderer:${level}] ${message} (${sourceId}:${lineNumber})`);
   });
   win.webContents.on('render-process-gone', (_event, details) => {
     console.error('Renderer process exited unexpectedly', details);

@@ -1,6 +1,6 @@
 {
   "name": "vispnote",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "desktopName": "vispnote.desktop",
   "description": "VispNote — a local-first, block-based note-taking desktop app",
   "license": "Apache-2.0",
@@ -36,6 +36,7 @@
   "scripts": {
     "build:renderer": "node scripts/build-renderer.js",
     "verify:package-renderer": "node scripts/verify-packaged-renderer.js",
+    "check:packaged-app": "node scripts/packaged-launch-check.js",
     "verify:release-artifacts": "node scripts/release-tools/verify-release-artifacts.js",
     "prepare:release-artifacts": "node scripts/release-tools/prepare-artifacts.js",
     "check:release-tag": "node scripts/release-tools/validate-release-tag.js",
@@ -67,8 +68,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "electron": "^41.10.1",
-    "electron-builder": "^26.15.3",
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -82,10 +83,10 @@
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/ibm-plex-serif": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.2.0",
     "electron-updater": "^6.8.9",
-    "katex": "^0.16.47",
-    "mermaid": "^11.16.1",
+    "katex": "^0.19.1",
+    "mermaid": "^12.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sqlite-vec": "^0.1.9"

@@ -252,17 +252,18 @@ function assertApplicationExecutable(resourceRoot, expectedArch, root = ROOT) {
 }
 
 function assertBetterSqliteNative(resourceRoot, expectedArch, root = ROOT) {
-  const nativeFile = path.join(
-    resourceRoot.resources,
-    'app.asar.unpacked',
-    'node_modules',
-    'better-sqlite3',
-    'build',
-    'Release',
-    'better_sqlite3.node'
-  );
-  if (!fs.existsSync(nativeFile)) {
+  const moduleDir = path.join(resourceRoot.resources, 'app.asar.unpacked', 'node_modules', 'better-sqlite3');
+  const expectedName = `prebuilds/${resourceRoot.platform}-${normalizeArch(expectedArch)}.node`;
+  const nativeFile = path.join(moduleDir, ...expectedName.split('/'));
+  const shipped = walk(moduleDir).filter(file => file.endsWith('.node'));
+  if (!shipped.length) {
     throw new Error(`Missing better-sqlite3 native module in ${relative(root, resourceRoot.resources)}`);
+  }
+  if (shipped.length !== 1 || shipped[0] !== nativeFile) {
+    throw new Error(
+      `Packaged better-sqlite3 must ship only ${expectedName}, received `
+      + shipped.map(file => relative(moduleDir, file).replace(/\\/g, '/')).join(', ')
+    );
   }
   assertExactBinaryArchitecture(
     nativeFile,
