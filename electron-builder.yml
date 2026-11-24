@@ -33,6 +33,8 @@ files:
   - "!vispnote-web/**/*"
   - "!*.tgz"
   - "!*.log"
+  - "!node_modules/better-sqlite3/prebuilds/**/*"
+  - "node_modules/better-sqlite3/prebuilds/${platform}-${arch}.node"
 
 asar: true
 asarUnpack:

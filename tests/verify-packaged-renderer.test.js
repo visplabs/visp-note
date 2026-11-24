@@ -6,6 +6,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const verifier = require('../scripts/verify-packaged-renderer.js');
+const { writeFakeAsar } = require('./helpers/asarFixtures');
 
 // The release gate that refuses to ship a package built for the wrong CPU or
 // carrying a stale renderer bundle. It reads binary headers by hand, so the
@@ -206,14 +207,14 @@ test('resource roots are discovered per platform, and none is not an error here'
     assert.deepEqual(verifier.discoverResourceRoots(path.join(dir, 'missing'), 'linux'), []);
 
     fs.mkdirSync(path.join(dir, 'linux-unpacked', 'resources'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'linux-unpacked', 'resources', 'app.asar'), 'not really an asar');
+    writeFakeAsar(path.join(dir, 'linux-unpacked', 'resources', 'app.asar'), 'not really an asar');
     const roots = verifier.discoverResourceRoots(dir, 'linux');
     assert.equal(roots.length, 1);
     assert.equal(roots[0].platform, 'linux');
     assert.match(roots[0].resources, /linux-unpacked/);
 
     fs.mkdirSync(path.join(dir, 'mac', 'VispNote.app', 'Contents', 'Resources'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'mac', 'VispNote.app', 'Contents', 'Resources', 'app.asar'), 'x');
+    writeFakeAsar(path.join(dir, 'mac', 'VispNote.app', 'Contents', 'Resources', 'app.asar'), 'x');
     const macRoots = verifier.discoverResourceRoots(dir, 'darwin');
     assert.equal(macRoots.length, 2, 'every resources directory under the build tree is checked');
     assert.ok(macRoots.every(root => root.platform === 'darwin'),

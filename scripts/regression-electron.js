@@ -3523,15 +3523,8 @@ async function runGeneralAttachmentScenario(win) {
 
 async function runRegression() {
   const win = await waitForMainWindow();
-  win.webContents.on('console-message', (_event, detailsOrLevel, legacyMessage, legacyLine, legacySourceId) => {
-    const details = detailsOrLevel && typeof detailsOrLevel === 'object'
-      ? detailsOrLevel
-      : { level: detailsOrLevel, message: legacyMessage, lineNumber: legacyLine, sourceId: legacySourceId };
-    const level = details?.level ?? 'log';
-    const message = details?.message ?? '';
-    const sourceId = details?.sourceId ?? '';
-    const line = details?.lineNumber ?? 0;
-    console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+  win.webContents.on('console-message', ({ level, message, sourceId, lineNumber }) => {
+    console.log(`[renderer:${level}] ${message} (${sourceId}:${lineNumber})`);
   });
   win.webContents.on('render-process-gone', (_event, details) => {
     console.error('Renderer process exited unexpectedly', details);
