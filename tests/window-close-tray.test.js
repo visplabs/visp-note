@@ -10,6 +10,10 @@ function flush() {
   return new Promise(resolve => setImmediate(resolve));
 }
 
+async function settle() {
+  for (let i = 0; i < 10; i += 1) await flush();
+}
+
 function fakeElectron() {
   const ipcMain = new EventEmitter();
   const windows = [];
@@ -59,6 +63,7 @@ function fakeElectron() {
   }
 
   class FakeTray extends EventEmitter {
+    destroy() {}
     setToolTip() {}
     setContextMenu() {}
   }
@@ -102,7 +107,7 @@ test('closing the window hides it when a tray host is showing the tray icon', as
   const { app, win } = await openApp(async () => true);
 
   win.close();
-  await flush();
+  await settle();
 
   assert.equal(win.isDestroyed(), false);
   assert.equal(win.isVisible(), false);
@@ -113,8 +118,7 @@ test('closing the window quits when no tray host exists, so the app is never hid
   const { app, win } = await openApp(async () => false);
 
   win.close();
-  await flush();
-  await flush();
+  await settle();
 
   assert.equal(win.isDestroyed(), true, 'the window must close instead of hiding');
   assert.ok(app.quitCalls >= 1, 'the app must quit');
@@ -124,18 +128,62 @@ test('closing the window quits when the tray host check fails', async () => {
   const { app, win } = await openApp(async () => { throw new Error('no session bus'); });
 
   win.close();
-  await flush();
-  await flush();
+  await settle();
 
   assert.equal(win.isDestroyed(), true);
   assert.ok(app.quitCalls >= 1);
+});
+
+function answers(...values) {
+  let call = 0;
+  return async () => values[Math.min(call++, values.length - 1)];
+}
+
+test('a tray host that appears after start-up is found when the window closes', async () => {
+  const { app, win } = await openApp(answers(false, true));
+
+  win.close();
+  await settle();
+
+  assert.equal(win.isDestroyed(), false);
+  assert.equal(win.isVisible(), false, 'the window hides to the tray that is now showing');
+  assert.equal(app.quitCalls, 0);
+});
+
+test('a tray host that went away after start-up makes closing quit', async () => {
+  const { app, win } = await openApp(answers(true, false));
+
+  win.close();
+  await settle();
+
+  assert.equal(win.isDestroyed(), true);
+  assert.ok(app.quitCalls >= 1);
+});
+
+test('closing while the start-up tray check is still running waits for an answer', async () => {
+  let resolveStartup;
+  let calls = 0;
+  const detect = () => {
+    calls += 1;
+    return calls === 1 ? new Promise(resolve => { resolveStartup = resolve; }) : Promise.resolve(true);
+  };
+  const { app, win } = await openApp(detect);
+
+  win.close();
+  await settle();
+  resolveStartup(false);
+  await flush();
+
+  assert.equal(win.isDestroyed(), false);
+  assert.equal(win.isVisible(), false);
+  assert.equal(app.quitCalls, 0);
 });
 
 test('on macOS closing the window still hides it, because the Dock brings it back', async () => {
   const { app, win } = await openApp(async () => false, 'darwin');
 
   win.close();
-  await flush();
+  await settle();
 
   assert.equal(win.isDestroyed(), false);
   assert.equal(win.isVisible(), false);

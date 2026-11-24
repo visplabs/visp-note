@@ -5,7 +5,7 @@ function createWindowLifecycle({
 }) {
   let mainWindow = null;
   let tray = null;
-  let trayHostFound = false;
+  let trayHostAtCreation = false;
   let isQuitting = false;
   let flushSequence = 0;
   let shortcutState = { accelerator: null, registered: false, error: null };
@@ -78,25 +78,38 @@ function createWindowLifecycle({
     ]));
   }
 
-  function checkTrayHost() {
-    Promise.resolve()
-      .then(() => detectTrayHost())
-      .then(found => { trayHostFound = found === true; })
-      .catch(error => {
-        trayHostFound = false;
-        console.warn('tray host check failed; closing the window will quit', error?.message || error);
-      });
+  async function askForTrayHost() {
+    try {
+      return (await detectTrayHost()) === true;
+    } catch (error) {
+      console.warn('tray host check failed; closing the window will quit', error?.message || error);
+      return false;
+    }
   }
 
-  function closeHidesWindow() {
-    return platform === 'darwin' || (!!tray && trayHostFound);
+  // Chromium registers the tray icon with the host only when the icon is created,
+  // so an icon made before the host appeared is rebuilt before relying on it.
+  function rebuildTray() {
+    tray.destroy();
+    tray = null;
+    createTray();
+  }
+
+  async function trayIsShowing() {
+    if (platform === 'darwin') return true;
+    if (!tray) return false;
+    const found = await askForTrayHost();
+    if (found && !trayHostAtCreation) rebuildTray();
+    return found;
   }
 
   function createTray() {
     if (tray) return;
     tray = new Tray(createAppIcon());
     tray.setToolTip(appName);
-    checkTrayHost();
+    trayHostAtCreation = false;
+    const created = tray;
+    askForTrayHost().then(found => { if (tray === created) trayHostAtCreation = found; });
     tray.on('click', () => {
       if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.hide();
       else showMainWindow();
@@ -159,6 +172,37 @@ function createWindowLifecycle({
     });
   }
 
+  function closeForQuit(win, event) {
+    if (win.__vispnoteFlushComplete) return;
+    event.preventDefault();
+    if (win.__vispnoteFlushInProgress) return;
+    win.__vispnoteFlushInProgress = true;
+    flushDirtyNotes(win).then(result => {
+      const status = quitPersistence.classifyFlushResult(result);
+      win.__vispnoteFlushInProgress = false;
+      if (!status.ok) return cancelQuit(win, status);
+      win.__vispnoteFlushComplete = true;
+      if (!win.isDestroyed()) win.close();
+      setImmediate(() => { if (isQuitting) app.quit(); });
+    }).catch(error => {
+      win.__vispnoteFlushInProgress = false;
+      console.error('dirty-note flush failed', error);
+      cancelQuit(win, quitPersistence.classifyFlushResult({ ok: false, error: error?.message || String(error) }));
+    });
+  }
+
+  async function hideToTrayOrQuit(win) {
+    const hide = await trayIsShowing();
+    if (win.isDestroyed()) return;
+    if (hide) {
+      win.hide();
+      updateTrayMenu();
+      return;
+    }
+    isQuitting = true;
+    win.close();
+  }
+
   function createWindow() {
     const win = new BrowserWindow({
       width: 1440, height: 900, minWidth: 900, minHeight: 700,
@@ -183,29 +227,12 @@ function createWindowLifecycle({
     mainWindow = win;
     attachEditContextMenu(win);
     win.on('close', event => {
-      if (!isQuitting && !closeHidesWindow()) isQuitting = true;
       if (isQuitting) {
-        if (win.__vispnoteFlushComplete) return;
-        event.preventDefault();
-        if (win.__vispnoteFlushInProgress) return;
-        win.__vispnoteFlushInProgress = true;
-        flushDirtyNotes(win).then(result => {
-          const status = quitPersistence.classifyFlushResult(result);
-          win.__vispnoteFlushInProgress = false;
-          if (!status.ok) return cancelQuit(win, status);
-          win.__vispnoteFlushComplete = true;
-          if (!win.isDestroyed()) win.close();
-          setImmediate(() => { if (isQuitting) app.quit(); });
-        }).catch(error => {
-          win.__vispnoteFlushInProgress = false;
-          console.error('dirty-note flush failed', error);
-          cancelQuit(win, quitPersistence.classifyFlushResult({ ok: false, error: error?.message || String(error) }));
-        });
+        closeForQuit(win, event);
         return;
       }
       event.preventDefault();
-      win.hide();
-      updateTrayMenu();
+      hideToTrayOrQuit(win);
     });
     win.on('show', updateTrayMenu);
     win.on('hide', updateTrayMenu);
