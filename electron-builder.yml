@@ -13,6 +13,7 @@ publish:
 files:
   - vispnote.html
   - main.js
+  - main/**/*
   - preload.js
   - package.json
   - assets/**/*
